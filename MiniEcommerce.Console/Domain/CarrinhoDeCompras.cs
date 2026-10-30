@@ -78,6 +78,34 @@ public class CarrinhoDeCompras
 
     public void Limpar() => _itens.Clear();
 
+    public Pedido FinalizarPedido()
+    {
+        if (EstaVazio)
+        {
+            throw new InvalidOperationException("Não é possível finalizar um pedido com o carrinho vazio.");
+        }
+
+        // Valida todos os itens antes de baixar qualquer estoque, evitando baixa parcial.
+        var itemSemEstoque = _itens.FirstOrDefault(item => !item.Produto.TemEstoquePara(item.Quantidade));
+
+        if (itemSemEstoque is not null)
+        {
+            throw new InvalidOperationException(
+                $"Estoque insuficiente para o produto '{itemSemEstoque.Produto.Nome}'. Disponível: {itemSemEstoque.Produto.QuantidadeEstoque}, solicitado: {itemSemEstoque.Quantidade}.");
+        }
+
+        foreach (var item in _itens)
+        {
+            item.Produto.BaixarEstoque(item.Quantidade);
+        }
+
+        var pedido = new Pedido(_itens.Select(item =>
+            new ItemPedido(item.Produto.Nome, item.PrecoUnitario, item.Quantidade)));
+
+        _itens.Clear();
+        return pedido;
+    }
+
     private ItemCarrinho ObterItem(Produto produto) =>
         _itens.FirstOrDefault(item => item.Produto == produto)
         ?? throw new InvalidOperationException($"O produto '{produto.Nome}' não está no carrinho.");
