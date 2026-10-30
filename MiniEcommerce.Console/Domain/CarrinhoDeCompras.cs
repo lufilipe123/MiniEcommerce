@@ -27,8 +27,7 @@ public class CarrinhoDeCompras
 
         if (!produto.TemEstoquePara(quantidadeTotal))
         {
-            throw new InvalidOperationException(
-                $"Estoque insuficiente para o produto '{produto.Nome}'. Disponível: {produto.QuantidadeEstoque}, solicitado: {quantidadeTotal}.");
+            throw new InvalidOperationException(MensagemEstoqueInsuficiente(produto, quantidadeTotal));
         }
 
         if (itemExistente is null)
@@ -91,7 +90,7 @@ public class CarrinhoDeCompras
         if (itemSemEstoque is not null)
         {
             throw new InvalidOperationException(
-                $"Estoque insuficiente para o produto '{itemSemEstoque.Produto.Nome}'. Disponível: {itemSemEstoque.Produto.QuantidadeEstoque}, solicitado: {itemSemEstoque.Quantidade}.");
+                MensagemEstoqueInsuficiente(itemSemEstoque.Produto, itemSemEstoque.Quantidade));
         }
 
         foreach (var item in _itens)
@@ -105,6 +104,9 @@ public class CarrinhoDeCompras
         _itens.Clear();
         return pedido;
     }
+
+    private static string MensagemEstoqueInsuficiente(Produto produto, int quantidadeSolicitada) =>
+        $"Estoque insuficiente para o produto '{produto.Nome}'. Disponível: {produto.QuantidadeEstoque}, solicitado: {quantidadeSolicitada}.";
 
     private ItemCarrinho ObterItem(Produto produto) =>
         _itens.FirstOrDefault(item => item.Produto == produto)
